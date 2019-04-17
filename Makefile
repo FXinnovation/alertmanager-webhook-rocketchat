@@ -22,7 +22,11 @@ LDFLAGS=-ldflags "\
 
 PWD=$(shell pwd)
 
-.PHONY: all help clean test test-cover test-coverage dependencies build fmt vet lint tools
+DOCKER_REPO             ?= fxinnovation
+DOCKER_IMAGE_NAME       ?= alertmanager-webhook-rocketchat
+DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
+
+.PHONY: all help clean test test-cover test-coverage dependencies build docker fmt vet lint tools
 
 all: fmt build test
 
@@ -49,6 +53,10 @@ dependencies: ## download the dependencies
 
 build: clean fmt vet
 	go build $(LDFLAGS)
+
+docker:
+	@echo ">> building docker image"
+	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
 
 fmt: ## go fmt on packages
 	go fmt $(PKGGOFILES)
