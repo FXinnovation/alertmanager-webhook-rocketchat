@@ -21,7 +21,7 @@ var (
 	rocketChatClient RocketChatClient
 )
 
-// Webhook http response
+// JSONResponse is the webhook http response
 type JSONResponse struct {
 	Status  int
 	Message string
@@ -35,7 +35,7 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var errAuthentication error = nil
+	var errAuthentication error
 
 	errSend := retry(1, 2*time.Second, func() (err error) {
 		errSend := SendNotification(rocketChatClient, data, config)

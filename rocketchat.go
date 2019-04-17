@@ -12,10 +12,12 @@ import (
 	"github.com/prometheus/alertmanager/template"
 )
 
+// ChannelInfo - Channel configuration
 type ChannelInfo struct {
 	DefaultChannelName string `yaml:"default_channel_name"`
 }
 
+// Config - Rocket.Chat webhook configuration
 type Config struct {
 	Endpoint       url.URL                `yaml:"endpoint"`
 	Credentials    models.UserCredentials `yaml:"credentials"`
@@ -23,6 +25,7 @@ type Config struct {
 	Channel        ChannelInfo            `yaml:"channel"`
 }
 
+// RocketChatClient is the client interface to Rocket.Chat
 type RocketChatClient interface {
 	Login(credentials *models.UserCredentials) (*models.User, error)
 	GetChannelId(name string) (string, error)
@@ -30,6 +33,7 @@ type RocketChatClient interface {
 	NewMessage(channel *models.Channel, text string) *models.Message
 }
 
+// GetRocketChatClient returns the RocketChatClient
 func GetRocketChatClient(config Config) (*realtime.Client, error) {
 
 	rtClient, errClient := realtime.NewClient(&config.Endpoint, false)
@@ -41,6 +45,7 @@ func GetRocketChatClient(config Config) (*realtime.Client, error) {
 
 }
 
+// AuthenticateRocketChatClient performs login on the client
 func AuthenticateRocketChatClient(rtClient RocketChatClient, config Config) error {
 	_, errUser := rtClient.Login(&config.Credentials)
 	return errUser
