@@ -96,6 +96,18 @@ groups:
       description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minutes."
 ```
 
+## Docker image
+
+You can build a docker image using:
+```bash
+make docker
+```
+The resulting image is named `fxinnovation/alertmanager-webhook-rocketchat:{git-branch}`.
+It exposes port 9876 and expects the config in /config/rocketchat.yml. To configure it, you can bind-mount a config from your host: 
+```
+$ docker run -p 9876 -v /path/on/host/config/rocketchat.yml:/config/rocketchat.yml fxinnovation/alertmanager-webhook-rocketchat:master
+```
+
 ## Contributing
 
 Refer to [CONTRIBUTING.md](https://github.com/FXinnovation/alertmanager-webhook-rocketchat/blob/master/CONTRIBUTING.md).
