@@ -98,7 +98,9 @@ groups:
 
 ## Docker image
 
-You can build a docker image using:
+To run alertmanager-webhook-rocketchat on Docker, you can use the [fxinnovation/alertmanager-webhook-rocketchat](https://hub.docker.com/r/fxinnovation/alertmanager-webhook-rocketchat) image. 
+
+You can also build a docker image from sources using:
 ```bash
 make docker
 ```
