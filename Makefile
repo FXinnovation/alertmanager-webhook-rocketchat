@@ -74,13 +74,19 @@ tools: ## install tools to develop
 	go get github.com/AlekSi/gocov-xml
 
 VERSION?=$(shell cat VERSION.txt)
-PLATFORMS:=windows linux darwin
-os=$(word 1, $@)
 TAGEXISTS=$(shell git tag --list | egrep -q "^$(VERSION)$$" && echo 1 || echo 0)
 
-$(PLATFORMS): ## build for each platform
+linux: ## build for linux platform
 	mkdir -p release
-	GOOS=$(os) GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-$(os)-amd64
+	GOOS=linux GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-linux-amd64
+
+windows: ## build for windows platform
+	mkdir -p release
+	GOOS=windows GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-windows-amd64.exe
+
+darwin: ## build for darwin platform
+	mkdir -p release
+	GOOS=darwin GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-darwin-amd64
 
 release-tag: ## create a release tag
 	@if [ $(TAGEXISTS) == 0 ]; then \
