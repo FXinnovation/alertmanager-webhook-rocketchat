@@ -26,7 +26,7 @@ DOCKER_REPO             ?= fxinnovation
 DOCKER_IMAGE_NAME       ?= alertmanager-webhook-rocketchat
 DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-.PHONY: all help clean test test-cover test-coverage dependencies build docker fmt vet lint tools
+.PHONY: all help clean test test-cover test-coverage dependencies build docker fmt vet lint tools $(PLATFORMS) release docker-release
 
 all: fmt build test
 
@@ -72,3 +72,26 @@ tools: ## install tools to develop
 	go get -u golang.org/x/lint/golint
 	go get github.com/axw/gocov/...
 	go get github.com/AlekSi/gocov-xml
+
+VERSION?=$(shell cat VERSION.txt)
+PLATFORMS:=windows linux darwin
+os=$(word 1, $@)
+TAGEXISTS=$(shell git tag --list | egrep -q "^$(VERSION)$$" && echo 1 || echo 0)
+
+$(PLATFORMS): ## build for each platform
+	mkdir -p release
+	GOOS=$(os) GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-$(os)-amd64
+
+release-tag: ## create a release tag
+	@if [ $(TAGEXISTS) == 0 ]; then \
+		echo ">>Creating tag $(VERSION)";\
+		git tag $(VERSION);\
+		git push -u origin $(VERSION);\
+	fi
+
+release: release-tag windows linux darwin ## build all platforms and tag the version with VERSION.txt
+
+docker-release: ## pushes the VERSION.txt tag to docker hub
+	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)" .
+	@docker push $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)
+
