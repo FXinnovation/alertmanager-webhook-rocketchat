@@ -26,7 +26,7 @@ DOCKER_REPO             ?= fxinnovation
 DOCKER_IMAGE_NAME       ?= alertmanager-webhook-rocketchat
 DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-.PHONY: all help clean test test-cover test-coverage dependencies build docker fmt vet lint tools $(PLATFORMS) release docker-release
+.PHONY: all help clean test test-cover test-coverage dependencies build docker fmt vet lint tools windows linux darwin release release-docker
 
 all: fmt build test
 
@@ -95,9 +95,9 @@ release-tag: ## create a release tag
 		git push -u origin $(VERSION);\
 	fi
 
-release: release-tag windows linux darwin ## build all platforms and tag the version with VERSION.txt
+release: release-tag windows linux darwin release-docker ## build all platforms and tag the version with VERSION.txt
 
-docker-release: ## pushes the VERSION.txt tag to docker hub
+release-docker: ## pushes the VERSION.txt tag to docker hub
 	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)" .
 	@docker push $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)
 
