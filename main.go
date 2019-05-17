@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/RocketChat/Rocket.Chat.Go.SDK/models"
+	"github.com/prometheus/common/log"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/prometheus/alertmanager/template"
@@ -26,6 +28,14 @@ var (
 type JSONResponse struct {
 	Status  int
 	Message string
+}
+
+// Config - Rocket.Chat webhook configuration
+type Config struct {
+	Endpoint       url.URL                `yaml:"endpoint"`
+	Credentials    models.UserCredentials `yaml:"credentials"`
+	SeverityColors map[string]string      `yaml:"severity_colors"`
+	Channel        ChannelInfo            `yaml:"channel"`
 }
 
 func checkConfig(config Config) error {
@@ -48,7 +58,6 @@ func checkConfig(config Config) error {
 }
 
 func webhook(w http.ResponseWriter, r *http.Request) {
-
 	data, err := readRequestBody(r)
 	if err != nil {
 		sendJSONResponse(w, http.StatusBadRequest, err.Error())
@@ -58,14 +67,13 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 	var errAuthentication error
 
 	errSend := retry(1, 2*time.Second, func() (err error) {
-		errSend := SendNotification(rocketChatClient, data, config)
+		errSend := SendNotification(rocketChatClient, data)
 		if errSend != nil {
-			errAuthentication = AuthenticateRocketChatClient(rocketChatClient, config)
+			errAuthentication = AuthenticateRocketChatClient(rocketChatClient)
 		}
 
 		if errAuthentication != nil {
-			log.Printf("Error authenticating RocketChat client: %v", errAuthentication)
-			log.Print("No notification was sent")
+			log.Errorf("Error authenticating RocketChat client: %v", errAuthentication)
 		}
 
 		return errSend
@@ -73,7 +81,7 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if errSend != nil {
-		log.Printf("Error sending notifications to RocketChat : %v", errSend)
+		log.Errorf("Error sending notifications to RocketChat : %v", errSend)
 		// Returns a 403 if the user can't authenticate
 		sendJSONResponse(w, http.StatusUnauthorized, errAuthentication.Error())
 	} else {
@@ -95,7 +103,7 @@ func retry(retries int, sleep time.Duration, f func() error) (err error) {
 
 		time.Sleep(sleep)
 
-		log.Println("retrying after error:", err)
+		log.Warnf("retrying after error: %v", err)
 	}
 	return fmt.Errorf("after %d retries, last error: %s", retries, err)
 }
@@ -111,24 +119,23 @@ func main() {
 
 	errCheckConfig := checkConfig(config)
 	if errCheckConfig != nil {
-		log.Printf("Error while loading configuration: %v", errCheckConfig)
-		log.Fatal("Missing Rocket.Chat config parameters.")
+		log.Fatalf("Missing Rocket.Chat config parameters:%v", errCheckConfig)
 	} else {
 		var errClient error
-		rocketChatClient, errClient = GetRocketChatClient(config)
+		rocketChatClient, errClient = GetRocketChatClient()
 		if errClient != nil {
 			log.Fatalf("Error getting RocketChat client: %v", errClient)
 		}
 
-		errAuthentication := AuthenticateRocketChatClient(rocketChatClient, config)
+		errAuthentication := AuthenticateRocketChatClient(rocketChatClient)
 		if errAuthentication != nil {
-			log.Printf("Error authenticating RocketChat client: %v", errAuthentication)
+			log.Errorf("Error authenticating RocketChat client: %v", errAuthentication)
 		}
 
 		http.HandleFunc("/webhook", webhook)
 		http.Handle("/metrics", promhttp.Handler())
 
-		log.Printf("listening on: %v", *listenAddress)
+		log.Infof("listening on: %v", *listenAddress)
 		log.Fatal(http.ListenAndServe(*listenAddress, nil))
 	}
 }
@@ -143,7 +150,7 @@ func sendJSONResponse(w http.ResponseWriter, status int, message string) {
 
 	bytes, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Error writing body: %v", err.Error())
+		log.Errorf("Error writing body: %v", err.Error())
 	} else {
 		w.Write(bytes)
 	}

@@ -189,7 +189,7 @@ func initMockMessage(text, attachmentText, color, channelName string) {
 		Msg:    text,
 		PostMessage: models.PostMessage{
 			Attachments: []models.Attachment{
-				models.Attachment{
+				{
 					Color: color,
 					Text:  attachmentText,
 				},
@@ -206,12 +206,16 @@ func initMockMessage(text, attachmentText, color, channelName string) {
 
 func TestWebhookHandlerWarning(t *testing.T) {
 
-	text := "**[firing] warning: Oops, something happened!**"
-	attachmentText := "**description**: \n**alert_timestamp**: " +
-		"2019-03-14 17:05:37.903 +0000 UTC\n**alertname**: something_happened\n" +
-		"**env**: prod\n**instance**: server01.int:9100\n" +
-		"**job**: node\n**service**: prometheus_bot\n" +
-		"**severity**: warning\n**supervisor**: runit\n"
+	text := "**[ firing ] something_happened from admins at 2019-03-14 17:05:37.903 +0000 UTC**"
+	attachmentText := `**alertname**: something_happened
+**env**: prod
+**instance**: server01.int:9100
+**job**: node
+**service**: prometheus_bot
+**severity**: warning
+**supervisor**: runit
+**summary**: Oops, something happened!
+`
 	color := "<warning_color_hexcode>"
 	channelName := "prometheus-test-room"
 
@@ -227,13 +231,16 @@ func TestWebhookHandlerWarning(t *testing.T) {
 }
 
 func TestWebhookHandlerCritical(t *testing.T) {
-
-	text := "**[firing] critical: Oops, something happened!**"
-	attachmentText := "**description**: \n**alert_timestamp**: " +
-		"2019-03-14 17:05:37.903 +0000 UTC\n**alertname**: something_happened\n" +
-		"**env**: prod\n**instance**: server01.int:9100\n" +
-		"**job**: node\n**service**: prometheus_bot\n" +
-		"**severity**: critical\n**supervisor**: runit\n"
+	text := "**[ firing ] something_happened from admins at 2019-03-14 17:05:37.903 +0000 UTC**"
+	attachmentText := `**alertname**: something_happened
+**env**: prod
+**instance**: server01.int:9100
+**job**: node
+**service**: prometheus_bot
+**severity**: critical
+**supervisor**: runit
+**summary**: Oops, something happened!
+`
 	color := "<critical_color_hexcode>"
 	channelName := "prometheus-test-room"
 
@@ -249,13 +256,16 @@ func TestWebhookHandlerCritical(t *testing.T) {
 }
 
 func TestWebhookHandlerUndefined(t *testing.T) {
-
-	text := "**[firing] critic: Oops, something happened!**"
-	attachmentText := "**description**: \n**alert_timestamp**: " +
-		"2019-03-14 17:05:37.903 +0000 UTC\n**alertname**: something_happened\n" +
-		"**env**: prod\n**instance**: server01.int:9100\n" +
-		"**job**: node\n**service**: prometheus_bot\n" +
-		"**severity**: critic\n**supervisor**: runit\n"
+	text := "**[ firing ] something_happened from admins at 2019-03-14 17:05:37.903 +0000 UTC**"
+	attachmentText := `**alertname**: something_happened
+**env**: prod
+**instance**: server01.int:9100
+**job**: node
+**service**: prometheus_bot
+**severity**: critic
+**supervisor**: runit
+**summary**: Oops, something happened!
+`
 	color := "#ffffff"
 	channelName := "<default_channel_name>"
 
