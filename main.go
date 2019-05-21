@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/RocketChat/Rocket.Chat.Go.SDK/models"
 	"github.com/prometheus/common/log"
+	"github.com/prometheus/common/version"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -112,6 +113,7 @@ func retry(retries int, sleep time.Duration, f func() error) (err error) {
 // - one to give a status on the receiver itself
 // - one to actually process the data
 func main() {
+	kingpin.Version(version.Print("alertmanager-webhook-rocketchat"))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 

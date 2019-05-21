@@ -1,92 +1,79 @@
+GO    := GO15VENDOREXPERIMENT=1 go
+PROMU := $(GOPATH)/bin/promu
+pkgs   = $(shell $(GO) list ./... | grep -v /vendor/)
 
-SRC_DIR=github.com/fxinnovation/alertmanager-webhook-rocketchat
-BUILD_VERSION=$(shell cat VERSION.txt)
-APPL=alertmanager-webhook-rocketchat
-
-######## commom
-
-PKGGOFILES=$(shell go list ./... | grep -v /vendor/)
-
-GIT_COMMIT?=$(shell git rev-parse --short HEAD)
-GIT_DIRTY?=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
-GIT_DESCRIBE?=$(shell git describe --tags --always)
-BUILD_TIME?=$(shell date +"%Y-%m-%dT%H:%M:%S")
-
-LDFLAGS=-ldflags "\
-          -X $(SRC_DIR)/information.Version=$(BUILD_VERSION) \
-          -X $(SRC_DIR)/information.BuildTime=$(BUILD_TIME) \
-          -X $(SRC_DIR)/information.GitCommit=$(GIT_COMMIT) \
-          -X $(SRC_DIR)/information.GitDirty=$(GIT_DIRTY) \
-          -X $(SRC_DIR)/information.GitDescribe=$(GIT_DESCRIBE)"
-
-
-PWD=$(shell pwd)
-
+PREFIX                  ?= $(shell pwd)
+BIN_DIR                 ?= $(shell pwd)
 DOCKER_REPO             ?= fxinnovation
 DOCKER_IMAGE_NAME       ?= alertmanager-webhook-rocketchat
 DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-.PHONY: all help clean test test-cover test-coverage dependencies build docker fmt vet lint tools windows linux darwin release release-docker
+all: vet format build test
 
-all: fmt build test
+test: build ## running test after build
+	@echo ">> running tests"
+	@$(GO) test -cpu=2 -p=2 -v -short $(pkgs)
+
+test-cover: format vet ## go test with coverage
+	go test  $(pkgs) -cover -race -v
+
+style: ## check code style
+	@echo ">> checking code style"
+	@! gofmt -d $(shell find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
+
+format: ## Format code
+	@echo ">> formatting code"
+	@$(GO) fmt $(pkgs)
+
+vet: ## vet code
+	@echo ">> vetting code"
+	@$(GO) vet $(pkgs)
+
+dependencies: tools ## download the dependencies
+	rm -rf Gopkg.lock vendor/
+	dep ensure
+
+tools: ## install tools to develop
+	go get -u github.com/golang/dep/cmd/dep
+	go get github.com/axw/gocov/...
+
+build: promu ## build code with promu
+	@echo ">> building binaries"
+	@$(PROMU) build --prefix $(PREFIX)
+
+tarball: promu ## creates a release tarball
+	@echo ">> building release tarball"
+	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
+
+docker: ## creates docker image
+	@echo ">> building docker image"
+	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+
+dockerlint: ## lints dockerfile
+	@echo ">> linting Dockerfile"
+	@docker run --rm -i hadolint/hadolint < Dockerfile
+
+promu: ## gets promu for building
+	@GOOS=$(shell uname -s | tr A-Z a-z) \
+		GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+		$(GO) get -u github.com/prometheus/promu
+
+lint: golint ## lint code
+	@echo ">> linting code"
+	@! golint $(pkgs) | grep '^'
+
+golint: ## gets golint for building
+	@go get -u golang.org/x/lint/golint
 
 help:
 	@grep -hE '^[a-zA-Z_-]+.*?:.*?## .*$$' ${MAKEFILE_LIST} | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[0;49;95m%-30s\033[0m %s\n", $$1, $$2}'
 
-## If you have go on your wonderful laptop
-clean:
-	@rm -rf ./target || true
-	@mkdir ./target || true
 
-test: fmt vet ## go test
-	go test -cpu=2 -p=2 -v --short $(LDFLAGS) $(PKGGOFILES)
+.PHONY: all style format dependencies build test vet tarball promu
 
-test-cover: fmt vet ## go test with coverage
-	go test  $(PKGGOFILES) -cover -race -v $(LDFLAGS)
-
-test-coverage: clean fmt vet ## for jenkins
-	gocov test $(PKGGOFILES) --short -cpu=2 -p=2 -v $(LDFLAGS) | gocov-xml > ./coverage-test.xml
-
-dependencies: ## download the dependencies
-	rm -rf Gopkg.lock vendor/
-	dep ensure
-
-build: clean fmt vet
-	go build $(LDFLAGS)
-
-docker:
-	@echo ">> building docker image"
-	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
-
-fmt: ## go fmt on packages
-	go fmt $(PKGGOFILES)
-
-vet: ## go vet on packages
-	go vet $(PKGGOFILES)
-
-lint: ## go vet on packages
-	golint -set_exit_status=true $(PKGGOFILES)
-
-tools: ## install tools to develop
-	go get -u github.com/golang/dep/cmd/dep
-	go get -u golang.org/x/lint/golint
-	go get github.com/axw/gocov/...
-	go get github.com/AlekSi/gocov-xml
 
 VERSION?=$(shell cat VERSION.txt)
 TAGEXISTS=$(shell git tag --list | egrep -q "^$(VERSION)$$" && echo 1 || echo 0)
-
-linux: ## build for linux platform
-	mkdir -p release
-	GOOS=linux GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-linux-amd64
-
-windows: ## build for windows platform
-	mkdir -p release
-	GOOS=windows GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-windows-amd64.exe
-
-darwin: ## build for darwin platform
-	mkdir -p release
-	GOOS=darwin GOARCH=amd64 go build $(LDFAGS) -o release/$(APPL)-$(VERSION)-darwin-amd64
 
 release-tag: ## create a release tag
 	@if [ $(TAGEXISTS) == 0 ]; then \
@@ -95,7 +82,7 @@ release-tag: ## create a release tag
 		git push -u origin $(VERSION);\
 	fi
 
-release: release-tag windows linux darwin release-docker ## build all platforms and tag the version with VERSION.txt
+release: release-tag release-docker ## tag the version with VERSION.txt
 
 release-docker: ## pushes the VERSION.txt tag to docker hub
 	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)" .
