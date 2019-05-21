@@ -17,11 +17,6 @@ const (
 	alertNameFieldName = "alertname"
 )
 
-// ChannelInfo - Channel configuration
-type ChannelInfo struct {
-	DefaultChannelName string `yaml:"default_channel_name"`
-}
-
 // RocketChatClient is the client interface to Rocket.Chat
 type RocketChatClient interface {
 	Login(credentials *models.UserCredentials) (*models.User, error)

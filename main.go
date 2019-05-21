@@ -39,6 +39,11 @@ type Config struct {
 	Channel        ChannelInfo            `yaml:"channel"`
 }
 
+// ChannelInfo - Channel configuration
+type ChannelInfo struct {
+	DefaultChannelName string `yaml:"default_channel_name"`
+}
+
 func checkConfig(config Config) error {
 	if config.Credentials.Name == "" {
 		return errors.New("rocket.chat name not provided")
