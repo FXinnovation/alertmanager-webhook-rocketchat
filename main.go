@@ -133,8 +133,8 @@ func main() {
 		if errAuthentication != nil {
 			log.Errorf("Error authenticating RocketChat client: %v", errAuthentication)
 		}
-	log.Info("Starting webhook", version.Info())
-	log.Info("Build context", version.BuildContext())
+		log.Info("Starting webhook", version.Info())
+		log.Info("Build context", version.BuildContext())
 		http.HandleFunc("/webhook", webhook)
 		http.Handle("/metrics", promhttp.Handler())
 

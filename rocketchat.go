@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	defaultColor     = "#ffffff"
-	severityLabel    = "severity"
-	titleFormat      = "**[ %s ] %s from %s at %s**"
-	attachmentFormat = "**%s**: %s\n"
+	defaultColor       = "#ffffff"
+	severityLabel      = "severity"
+	titleFormat        = "**[ %s ] %s from %s at %s**"
+	attachmentFormat   = "**%s**: %s\n"
+	alertNameFieldName = "alertname"
 )
 
 // ChannelInfo - Channel configuration
@@ -49,7 +50,8 @@ func AuthenticateRocketChatClient(rtClient RocketChatClient) error {
 
 func formatMessage(rtClient RocketChatClient, channel *models.Channel, alert template.Alert, receiver string) *models.Message {
 	severity := alert.Labels[severityLabel]
-	title := fmt.Sprintf(titleFormat, alert.Status, alert.Labels["alertname"], receiver, alert.StartsAt)
+
+	title := fmt.Sprintf(titleFormat, alert.Status, alert.Labels[alertNameFieldName], receiver, alert.StartsAt)
 	message := rtClient.NewMessage(channel, title)
 
 	var usedColor string
