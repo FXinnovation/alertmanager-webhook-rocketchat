@@ -78,11 +78,9 @@ func formatMessage(rtClient RocketChatClient, channel *models.Channel, alert tem
 // SendNotification connects to RocketChat server, authenticates the user and sends the notification
 func SendNotification(rtClient RocketChatClient, data template.Data) error {
 
-	var channelName string
+	channelName := config.Channel.DefaultChannelName
 	if val, ok := data.CommonLabels["channel_name"]; ok {
 		channelName = val
-	} else {
-		channelName = config.Channel.DefaultChannelName
 	}
 
 	if channelName == "" {
