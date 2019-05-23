@@ -95,7 +95,17 @@ groups:
       summary: "Instance {{ $labels.instance }} down"
       description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minutes."
 ```
-
+## Building
+Build the sources with 
+```bash
+make build
+```
+**Note**: As this is a go build you can use _GOOS_ and _GOARCH_ environment variables to build for another platform.
+### Crossbuilding
+The _Makefile_ contains a _crossbuild_ target which builds all the platforms defined in _.promu.yml_ file and puts the files in _.build_ folder. Alternatively you can specify one platform to build with the OSARCH environment variable;
+```bash
+OSARCH=linux/amd64 make crossbuild
+```
 ## Docker image
 
 To run alertmanager-webhook-rocketchat on Docker, you can use the [fxinnovation/alertmanager-webhook-rocketchat](https://hub.docker.com/r/fxinnovation/alertmanager-webhook-rocketchat) image. 
@@ -109,6 +119,8 @@ It exposes port 9876 and expects the config in /config/rocketchat.yml. To config
 ```
 $ docker run -p 9876 -v /path/on/host/config/rocketchat.yml:/config/rocketchat.yml fxinnovation/alertmanager-webhook-rocketchat:master
 ```
+## Releasing
+The _release_tag_ and _release_docker_ targets are respectively creating and pushing a git tag and creating and pushing a docker image using the VERSION.txt file content as tag name.
 
 ## Contributing
 

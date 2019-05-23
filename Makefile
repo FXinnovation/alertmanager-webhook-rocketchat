@@ -78,13 +78,12 @@ TAGEXISTS=$(shell git tag --list | egrep -q "^$(VERSION)$$" && echo 1 || echo 0)
 release-tag: ## create a release tag
 	@if [ $(TAGEXISTS) == 0 ]; then \
 		echo ">>Creating tag $(VERSION)";\
-		git tag $(VERSION);\
-        git push -u origin $(VERSION);\
+		$(shell git tag $(VERSION) && git push -u origin $(VERSION));\
 	fi
 
 release-version: release-tag release-docker ## tag the version with VERSION.txt
 
-release: ## creates a crossbuild in .build folder for either all the supported platforms or the one passed as OSARCH var
+crossbuild: ## creates a crossbuild in .build folder for either all the supported platforms or the one passed as OSARCH var
 	@if [ -n "$(OSARCH)" ]; then \
 		echo ">> Building $(OSARCH)";\
 		$(PROMU) crossbuild -p $(OSARCH);\
