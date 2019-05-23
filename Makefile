@@ -86,10 +86,12 @@ release-version: release-tag release-docker ## tag the version with VERSION.txt
 
 release: ## creates a crossbuild in .build folder for either all the supported platforms or the one passed as OSARCH var
 	@if [ -n "$(OSARCH)" ]; then \
-		export PLATFORMS="-p $(OSARCH)";\
+		echo ">> Building $(OSARCH)";\
+		$(PROMU) crossbuild -p $(OSARCH);\
+	else\
+		echo ">> Building all platforms";\
+		$(PROMU) crossbuild;\
 	fi
-	echo $(PLATFORMS)
-	@$(PROMU) crossbuild $(PLATFORMS)
 
 release-docker: ## pushes the VERSION.txt tag to docker hub
 	@docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)" .
