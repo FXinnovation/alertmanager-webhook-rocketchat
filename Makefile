@@ -76,9 +76,9 @@ VERSION?=$(shell cat VERSION.txt)
 TAGEXISTS=$(shell git tag --list | egrep -q "^$(VERSION)$$" && echo 1 || echo 0)
 
 release-tag: ## create a release tag
-	@if [ $(TAGEXISTS) == 0 ]; then \
+	@if [ "$(TAGEXISTS)" -eq "0" ]; then \
 		echo ">>Creating tag $(VERSION)";\
-		git tag $(VERSION) && git push -u origin $(VERSION);\
+		nogit tag $(VERSION) && nogit push -u origin $(VERSION);\
 	fi
 
 release-version: release-tag release-docker ## tag the version with VERSION.txt
