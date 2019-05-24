@@ -119,8 +119,6 @@ It exposes port 9876 and expects the config in /config/rocketchat.yml. To config
 ```
 $ docker run -p 9876 -v /path/on/host/config/rocketchat.yml:/config/rocketchat.yml fxinnovation/alertmanager-webhook-rocketchat:master
 ```
-## Releasing
-The _release_tag_ and _release_docker_ targets are respectively creating and pushing a git tag and creating and pushing a docker image using the VERSION.txt file content as tag name.
 
 ## Contributing
 
