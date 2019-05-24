@@ -1,3 +1,4 @@
 config/rocketchat.yml
 alertmanager-webhook-rocketchat
+alertmanager-webhook-rocketchat.exe
 .build
