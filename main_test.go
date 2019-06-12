@@ -179,7 +179,7 @@ func TestReadRequestBodyError(t *testing.T) {
 func initMockMessage(text, attachmentText, color, channelName string) {
 
 	rocketChatMock := new(MockedClient)
-	rocketChatClient = rocketChatMock
+	rocketChat = rocketChatMock
 
 	rocketChatMock.On("GetChannelID", channelName).Return("test123")
 	channel := &models.Channel{ID: "test123"}

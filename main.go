@@ -19,10 +19,10 @@ import (
 )
 
 var (
-	configFile       = kingpin.Flag("config.file", "RocketChat configuration file.").Default("config/rocketchat.yml").String()
-	listenAddress    = kingpin.Flag("listen.address", "The address to listen on for HTTP requests.").Default(":9876").String()
-	config           Config
-	rocketChatClient RocketChat
+	configFile    = kingpin.Flag("config.file", "RocketChat configuration file.").Default("config/rocketchat.yml").String()
+	listenAddress = kingpin.Flag("listen.address", "The address to listen on for HTTP requests.").Default(":9876").String()
+	config        Config
+	rocketChat    RocketChat
 )
 
 // JSONResponse is the webhook http response
@@ -73,9 +73,9 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 	var errAuthentication error
 
 	errSend := retry(1, 2*time.Second, func() (err error) {
-		errSend := SendNotification(rocketChatClient, data)
+		errSend := SendNotification(rocketChat, data)
 		if errSend != nil {
-			errAuthentication = AuthenticateRocketChatClient(rocketChatClient)
+			errAuthentication = AuthenticateRocketChatClient(rocketChat)
 		}
 
 		if errAuthentication != nil {
@@ -129,12 +129,12 @@ func main() {
 		log.Fatalf("Missing Rocket.Chat config parameters:%v", errCheckConfig)
 	} else {
 		var errClient error
-		rocketChatClient, errClient = GetRocketChat()
+		rocketChat, errClient = GetRocketChat()
 		if errClient != nil {
 			log.Fatalf("Error getting RocketChat client: %v", errClient)
 		}
 
-		errAuthentication := AuthenticateRocketChatClient(rocketChatClient)
+		errAuthentication := AuthenticateRocketChatClient(rocketChat)
 		if errAuthentication != nil {
 			log.Errorf("Error authenticating RocketChat client: %v", errAuthentication)
 		}
