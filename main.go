@@ -129,7 +129,7 @@ func main() {
 		log.Fatalf("Missing Rocket.Chat config parameters:%v", errCheckConfig)
 	} else {
 		var errClient error
-		rocketChatClient, errClient = GetRocketChatClient()
+		rocketChatClient, errClient = GetRocketChat()
 		if errClient != nil {
 			log.Fatalf("Error getting RocketChat client: %v", errClient)
 		}

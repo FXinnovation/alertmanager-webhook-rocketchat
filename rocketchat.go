@@ -50,8 +50,8 @@ func (connector RocketChatConnector) NewMessage(channel *models.Channel, text st
 	return connector.Client.NewMessage(channel, text)
 }
 
-// GetRocketChatClient returns the RocketChat
-func GetRocketChatClient() (RocketChatConnector, error) {
+// GetRocketChat returns the RocketChat
+func GetRocketChat() (RocketChatConnector, error) {
 
 	rtClient, errClient := realtime.NewClient(&config.Endpoint, false)
 	if errClient != nil {
