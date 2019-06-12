@@ -8,7 +8,7 @@ DOCKER_REPO             ?= fxinnovation
 DOCKER_IMAGE_NAME       ?= alertmanager-webhook-rocketchat
 DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-all: vet format build test
+all: vet format lint build test
 
 test: build ## running test after build
 	@echo ">> running tests"
