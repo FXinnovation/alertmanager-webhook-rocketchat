@@ -181,7 +181,7 @@ func initMockMessage(text, attachmentText, color, channelName string) {
 	rocketChatMock := new(MockedClient)
 	rocketChatClient = rocketChatMock
 
-	rocketChatMock.On("WrapperGetChannelID", channelName).Return("test123")
+	rocketChatMock.On("GetChannelID", channelName).Return("test123")
 	channel := &models.Channel{ID: "test123"}
 	message := &models.Message{
 		ID:     "123",
@@ -196,12 +196,12 @@ func initMockMessage(text, attachmentText, color, channelName string) {
 			},
 		},
 	}
-	rocketChatMock.On("WrapperSendMessage", message).Return(message)
+	rocketChatMock.On("SendMessage", message).Return(message)
 
 	*configFile = "config/rocketchat_example.yml"
 	config = loadConfig(*configFile)
 	user := &models.User{ID: "123", Name: "prometheus"}
-	rocketChatMock.On("WrapperLogin", config).Return(user)
+	rocketChatMock.On("Login", config).Return(user)
 }
 
 func TestWebhookHandlerWarning(t *testing.T) {
@@ -335,17 +335,17 @@ func TestCheckConfig(t *testing.T) {
 	}
 }
 
-func (mock *MockedClient) WrapperGetChannelID(channelName string) (string, error) {
+func (mock *MockedClient) GetChannelID(channelName string) (string, error) {
 	args := mock.Called(channelName)
 	return args.String(0), nil
 }
 
-func (mock *MockedClient) WrapperSendMessage(message *models.Message) (*models.Message, error) {
+func (mock *MockedClient) SendMessage(message *models.Message) (*models.Message, error) {
 	args := mock.Called(message)
 	return args.Get(0).(*models.Message), nil
 }
 
-func (mock *MockedClient) WrapperNewMessage(channel *models.Channel, text string) *models.Message {
+func (mock *MockedClient) NewMessage(channel *models.Channel, text string) *models.Message {
 	return &models.Message{
 		ID:     "123",
 		RoomID: channel.ID,
@@ -353,7 +353,7 @@ func (mock *MockedClient) WrapperNewMessage(channel *models.Channel, text string
 	}
 }
 
-func (mock *MockedClient) WrapperLogin(credentials *models.UserCredentials) (*models.User, error) {
+func (mock *MockedClient) Login(credentials *models.UserCredentials) (*models.User, error) {
 	args := mock.Called(&config.Credentials)
 	return args.Get(0).(*models.User), nil
 }

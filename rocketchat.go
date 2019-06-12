@@ -17,12 +17,12 @@ const (
 	alertNameFieldName = "alertname"
 )
 
-// RocketChatClient is the client interface to Rocket.Chat
-type RocketChatClient interface {
-	WrapperLogin(credentials *models.UserCredentials) (*models.User, error)
-	WrapperGetChannelID(channelName string) (string, error)
-	WrapperSendMessage(message *models.Message) (*models.Message, error)
-	WrapperNewMessage(channel *models.Channel, text string) *models.Message
+// RocketChat is the client interface to Rocket.Chat
+type RocketChat interface {
+	Login(credentials *models.UserCredentials) (*models.User, error)
+	GetChannelID(channelName string) (string, error)
+	SendMessage(message *models.Message) (*models.Message, error)
+	NewMessage(channel *models.Channel, text string) *models.Message
 }
 
 // RocketChatConnector connector and method base
@@ -30,27 +30,27 @@ type RocketChatConnector struct {
 	Client *realtime.Client
 }
 
-// WrapperLogin wraps the Login method
-func (connector RocketChatConnector) WrapperLogin(credentials *models.UserCredentials) (*models.User, error) {
+// Login wraps the Login method
+func (connector RocketChatConnector) Login(credentials *models.UserCredentials) (*models.User, error) {
 	return connector.Client.Login(credentials)
 }
 
-// WrapperGetChannelID wraps the GetChannelId method
-func (connector RocketChatConnector) WrapperGetChannelID(channelName string) (string, error) {
+// GetChannelID wraps the GetChannelId method
+func (connector RocketChatConnector) GetChannelID(channelName string) (string, error) {
 	return connector.Client.GetChannelId(channelName)
 }
 
-// WrapperSendMessage wraps SendMessage method
-func (connector RocketChatConnector) WrapperSendMessage(message *models.Message) (*models.Message, error) {
+// SendMessage wraps SendMessage method
+func (connector RocketChatConnector) SendMessage(message *models.Message) (*models.Message, error) {
 	return connector.Client.SendMessage(message)
 }
 
-// WrapperNewMessage wraps the NewMessage method
-func (connector RocketChatConnector) WrapperNewMessage(channel *models.Channel, text string) *models.Message {
+// NewMessage wraps the NewMessage method
+func (connector RocketChatConnector) NewMessage(channel *models.Channel, text string) *models.Message {
 	return connector.Client.NewMessage(channel, text)
 }
 
-// GetRocketChatClient returns the RocketChatClient
+// GetRocketChatClient returns the RocketChat
 func GetRocketChatClient() (RocketChatConnector, error) {
 
 	rtClient, errClient := realtime.NewClient(&config.Endpoint, false)
@@ -63,16 +63,16 @@ func GetRocketChatClient() (RocketChatConnector, error) {
 }
 
 // AuthenticateRocketChatClient performs login on the client
-func AuthenticateRocketChatClient(connector RocketChatClient) error {
-	_, errUser := connector.WrapperLogin(&config.Credentials)
+func AuthenticateRocketChatClient(connector RocketChat) error {
+	_, errUser := connector.Login(&config.Credentials)
 	return errUser
 }
 
-func formatMessage(connector RocketChatClient, channel *models.Channel, alert template.Alert, receiver string) *models.Message {
+func formatMessage(connector RocketChat, channel *models.Channel, alert template.Alert, receiver string) *models.Message {
 	severity := alert.Labels[severityLabel]
 
 	title := fmt.Sprintf(titleFormat, alert.Status, alert.Labels[alertNameFieldName], receiver, alert.StartsAt)
-	message := connector.WrapperNewMessage(channel, title)
+	message := connector.NewMessage(channel, title)
 
 	var usedColor string
 	if color, colorExists := config.SeverityColors[severity]; colorExists {
@@ -101,7 +101,7 @@ func formatMessage(connector RocketChatClient, channel *models.Channel, alert te
 }
 
 // SendNotification connects to RocketChat server, authenticates the user and sends the notification
-func SendNotification(connector RocketChatClient, data template.Data) error {
+func SendNotification(connector RocketChat, data template.Data) error {
 
 	channelName := config.Channel.DefaultChannelName
 	if val, ok := data.CommonLabels["channel_name"]; ok {
@@ -111,7 +111,7 @@ func SendNotification(connector RocketChatClient, data template.Data) error {
 	if channelName == "" {
 		log.Error("Exception: Channel name not found. Please specify a default_channel_name in the configuration.")
 	} else {
-		channelID, errRoom := connector.WrapperGetChannelID(channelName)
+		channelID, errRoom := connector.GetChannelID(channelName)
 		if errRoom != nil {
 			log.Errorf("Error to get room ID: %v", errRoom)
 			return errRoom
@@ -122,7 +122,7 @@ func SendNotification(connector RocketChatClient, data template.Data) error {
 		for _, alert := range data.Alerts {
 
 			message := formatMessage(connector, channel, alert, data.Receiver)
-			_, errMessage := connector.WrapperSendMessage(message)
+			_, errMessage := connector.SendMessage(message)
 			if errMessage != nil {
 				log.Infof("Error to send message: %v", errMessage)
 				return errMessage
